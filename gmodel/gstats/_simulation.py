@@ -1,5 +1,5 @@
 
-class simulation():
+class Simulation():
 
     def __init__(self):
 

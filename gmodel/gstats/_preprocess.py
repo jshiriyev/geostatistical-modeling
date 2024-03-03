@@ -1,6 +1,6 @@
 import numpy
 
-class decluster():
+class Decluster():
 
 	def __init__(self,xmin,xmax,ymin,ymax):
 		"""Initializes the exterior boundaries of data."""

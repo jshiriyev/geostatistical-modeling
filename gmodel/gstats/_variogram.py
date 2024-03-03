@@ -1,124 +1,102 @@
-import numpy as np
+import numpy
 
 from scipy.stats import norm
 
-class variogram(np.ndarray):
+class variogram(numpy.ndarray):
 
     """It is a numpy array of shape (N,) with additional spatial attributes x,y,z"""
 
-    def __new__(cls,values=None,shape=None,X=None,Y=None,Z=None,dX=1,dY=1,dZ=1):
+    def __new__(cls,vals,x=None,y=None,z=None):
+        """it is a subclass of numpy.ndarray where x,y,z coordinates can be defined"""
 
-        """if provided, X,Y,Z must be one dimensional numpy array"""
+        obj = numpy.asarray(vals).view(cls)
 
-        if values is not None:
-            inp1 = (values.size,)
-            inp2 = values.ravel()
-            inp3 = values.dtype
-            ones = np.ones(values.shape)
-        else:
-            inp1 = (np.prod(shape),)
-            inp2 = np.zeros(shape).ravel()
-            inp3 = np.float64
-            ones = np.ones(shape)
+        obj.x = x if x is None else numpy.asarray(x).flatten()
+        obj.y = y if y is None else numpy.asarray(y).flatten()
+        obj.z = z if z is None else numpy.asarray(z).flatten()
 
-        self = super().__new__(cls,shape=inp1,buffer=inp2,dtype=inp3)
+        return obj
 
-        if X is not None:
-            self.x = X
-        else:
-            self.x = (np.cumsum(ones,0)-1).ravel()*dX
+    def __array_finalize__(self,obj):
 
-        if Y is not None:
-            self.y = Y
-        elif ones.ndim>1:
-            self.y = (np.cumsum(ones,1)-1).ravel()*dY
-        else:
-            self.y = ones.flatten()
+        if obj is None: return
 
-        if Z is not None:
-            self.z = Z
-        elif ones.ndim>2:
-            self.z = (np.cumsum(ones,2)-1).ravel()*dZ
-        else:
-            self.z = ones.flatten()
+        self.x = getattr(obj,'x',None)
+        self.y = getattr(obj,'y',None)
+        self.z = getattr(obj,'z',None)
 
-        return self
+    @property
+    def dx(self):
+        return 0 if self.x is None else self.get_delta(self.x,self.x)
 
-    def set_connection(self):
+    @property
+    def dy(self):
+        return 0 if self.y is None else self.get_delta(self.y,self.y)
 
+    @property
+    def dz(self):
+        return 0 if self.z is None else self.get_delta(self.z,self.z)
+    
+    @property
+    def distmat(self):
+        return numpy.sqrt(self.dx**2+self.dy**2+self.dz**2)
+
+    @property
+    def azimmat(self):
+        return numpy.arctan2(self.dy,self.dx)
+
+    @property
+    def isolag(self):
+        return self.distmat[self.distmat!=0].min()
+
+    @staticmethod
+    def get_expbins(lag,lagtol,lagmax):
+        return numpy.arange(lag,lagmax+lagtol/2,lag)
+
+    def set_experimental(self,lag=None,lagtol=None,lagmax=None,azimuth=None,azimuthtol=None,bandwidth=None,returnFlag=False):
         """
-        It calculates distance and angle between observation points;
-        both are calculated in 2-dimensional array form.
-        """
-        self.dx,self.dy,self.dz = SpatProp.get_distance(self,returnDeltaFlag=True)
-
-        self.distance = np.sqrt(self.dx**2+self.dy**2+self.dz**2)
-
-        self.angle = np.arctan2(self.dy,self.dx)
-
-    def set_experimental(self,lag=None,lagtol=None,lagmax=None,
-        azimuth=None,azimuthtol=None,bandwidth=None,returnFlag=False):
-
-        """
-        azimuth range is (-\\pi,\\pi] in radians [(-180,180] in degrees]
-        if we set +x to east and +y to north then the azimuth is selected
-        to be zero in the +x direction and positive counterclockwise
+        Azimuth range is (-\\pi,\\pi] in radians and (-180,180] in degrees.
+        If we set +x to east and +y to north then the azimuth is selected
+        to be zero in the +x direction and positive counterclockwise.
         """
         
-        prop_err = (self-np.reshape(self,(-1,1)))**2
+        prop_err = self.get_delta(self,self)**2
 
         """for an anisotropy only 2D data can be used FOR NOW"""
 
-        if azimuth is None:
-            self.azimuth = 0
-            self.azimuthtol = np.pi
-            self.bandwidth = np.inf
-        else:
-            self.azimuth = np.radians(azimuth)
-            self.azimuthtol = np.radians(azimuthtol)
-            self.bandwidth = bandwidth
+        self.azimuth = 0 if azimuth is None else numpy.radians(azimuth)
+        self.azimuthtol = numpy.pi if azimuth is None else numpy.radians(azimuthtol)
+        self.bandwidth = numpy.inf if azimuth is None else bandwidth
 
-        delta_angle = np.abs(self.angle-self.azimuth)
+        delta_angle = numpy.abs(self.angle-self.azimuth)
         
         con_azmtol = delta_angle<=self.azimuthtol
-        con_banwdt = np.sin(delta_angle)*self.distance<=(self.bandwidth/2.)
-        con_direct = np.logical_and(con_azmtol,con_banwdt)
+        con_banwdt = numpy.sin(delta_angle)*self.distance<=(self.bandwidth/2.)
+        con_direct = numpy.logical_and(con_azmtol,con_banwdt)
 
-        if lag is None:
-            cond0 = self.distance!=0
-            condM = np.logical_and(cond0,con_azmtol)
-            self.lag = self.distance[condM].min()
-        else:
-            self.lag = lag
+        con_ = numpy.logical_and(self.distance!=0,con_azmtol)
 
-        if lagtol is None:
-            self.lagtol = self.lag/2.
-        else:
-            self.lagtol = lagtol
+        self.lag = self.distance[con_].min() if lag is None else lag
 
-        if lagmax is None:
-            self.lagmax = self.distance[con_azmtol].max()
-        else:
-            self.lagmax = lagmax
+        self.lagtol = self.lag/2. if lagtol is None else lagtol
+        self.lagmax = self.distance[con_azmtol].max() if lagmax is None else lagmax
 
         self.outbound = self.lagmax+self.lagtol
 
         """bins is the array of lag distances"""
 
-        self.bins_experimental = np.arange(self.lag,self.outbound,self.lag)
-
-        self.experimental = np.zeros_like(self.bins_experimental)
+        self.experimental = numpy.zeros_like(self.bins_experimental)
         
         for i,h in enumerate(self.bins_experimental):
 
-            con_distnc = np.abs(self.distance-h)<=self.lagtol
+            con_distnc = numpy.abs(self.distance-h)<=self.lagtol
 
-            conoverall = np.logical_and(con_distnc,con_direct)
+            conoverall = numpy.logical_and(con_distnc,con_direct)
 
-            num_matchcon = np.count_nonzero(conoverall)
+            num_matchcon = numpy.count_nonzero(conoverall)
 
             if num_matchcon==0:
-                self.experimental[i] = np.nan
+                self.experimental[i] = numpy.nan
             else:
                 semivariance = prop_err[conoverall].sum()/(2*num_matchcon)
                 self.experimental[i] = semivariance
@@ -127,7 +105,6 @@ class variogram(np.ndarray):
             return self.bins_experimental,self.experimental
 
     def set_searchbox(self,origin_x=0,origin_y=0):
-
         """Nomenclature-BEGINNING"""
         ## alpha  : azimuth_tol at bandwidth dominated section
         ## omega  : bandwidth at azimuth_tol dominated section
@@ -135,49 +112,49 @@ class variogram(np.ndarray):
         """Nomenclature-END"""
 
         def azmtol(bandwidth,bound,azm_tol):
-            return(np.arcsin(min(np.sin(azm_tol),bandwidth/bound)))
+            return(numpy.arcsin(min(numpy.sin(azm_tol),bandwidth/bound)))
 
         def bndwdt(bandwidth,bound,azm_tol):
-            return min(bandwidth,bound*np.sin(azm_tol))
+            return min(bandwidth,bound*numpy.sin(azm_tol))
 
         alpha = azmtol(self.bandwidth,self.outbound,self.azimuthtol)
         omega = bndwdt(self.bandwidth,self.outbound,self.azimuthtol)
 
-        theta = np.linspace(self.azimuth-alpha,self.azimuth+alpha)
-        sides = omega/np.sin(self.azimuthtol)
+        theta = numpy.linspace(self.azimuth-alpha,self.azimuth+alpha)
+        sides = omega/numpy.sin(self.azimuthtol)
 
-        xO1 = self.outbound*np.cos(self.azimuth)
-        yO1 = self.outbound*np.sin(self.azimuth)
+        xO1 = self.outbound*numpy.cos(self.azimuth)
+        yO1 = self.outbound*numpy.sin(self.azimuth)
 
-        xO2 = self.outbound*np.cos(self.azimuth-alpha)
-        yO2 = self.outbound*np.sin(self.azimuth-alpha)
+        xO2 = self.outbound*numpy.cos(self.azimuth-alpha)
+        yO2 = self.outbound*numpy.sin(self.azimuth-alpha)
 
-        xO3 = self.outbound*np.cos(self.azimuth+alpha)
-        yO3 = self.outbound*np.sin(self.azimuth+alpha)
+        xO3 = self.outbound*numpy.cos(self.azimuth+alpha)
+        yO3 = self.outbound*numpy.sin(self.azimuth+alpha)
 
-        xO4 = sides*np.cos(self.azimuth-self.azimuthtol)
-        yO4 = sides*np.sin(self.azimuth-self.azimuthtol)
+        xO4 = sides*numpy.cos(self.azimuth-self.azimuthtol)
+        yO4 = sides*numpy.sin(self.azimuth-self.azimuthtol)
 
-        xO5 = sides*np.cos(self.azimuth+self.azimuthtol)
-        yO5 = sides*np.sin(self.azimuth+self.azimuthtol)
+        xO5 = sides*numpy.cos(self.azimuth+self.azimuthtol)
+        yO5 = sides*numpy.sin(self.azimuth+self.azimuthtol)
 
-        x1 = np.linspace(0,xO1)
-        y1 = np.linspace(0,yO1)
+        x1 = numpy.linspace(0,xO1)
+        y1 = numpy.linspace(0,yO1)
 
-        x2 = np.linspace(xO4,xO2)
-        y2 = np.linspace(yO4,yO2)
+        x2 = numpy.linspace(xO4,xO2)
+        y2 = numpy.linspace(yO4,yO2)
 
-        x3 = np.linspace(xO5,xO3)
-        y3 = np.linspace(yO5,yO3)
+        x3 = numpy.linspace(xO5,xO3)
+        y3 = numpy.linspace(yO5,yO3)
 
-        x4 = np.linspace(0,xO4)
-        y4 = np.linspace(0,yO4)
+        x4 = numpy.linspace(0,xO4)
+        y4 = numpy.linspace(0,yO4)
 
-        x5 = np.linspace(0,xO5)
-        y5 = np.linspace(0,yO5)
+        x5 = numpy.linspace(0,xO5)
+        y5 = numpy.linspace(0,yO5)
 
-        x6 = self.outbound*np.cos(theta)
-        y6 = self.outbound*np.sin(theta)
+        x6 = self.outbound*numpy.cos(theta)
+        y6 = self.outbound*numpy.sin(theta)
 
         plt.plot(origin_x+x1,origin_y+y1,'b--')
         plt.plot(origin_x+x2,origin_y+y2,'k')
@@ -191,10 +168,10 @@ class variogram(np.ndarray):
             hmin = h-self.lagtol
             
             hmin_alpha = azmtol(self.bandwidth,hmin,self.azimuthtol)
-            hmin_theta = np.linspace(self.azimuth-hmin_alpha,self.azimuth+hmin_alpha)
+            hmin_theta = numpy.linspace(self.azimuth-hmin_alpha,self.azimuth+hmin_alpha)
             
-            hmin_x = hmin*np.cos(hmin_theta)
-            hmin_y = hmin*np.sin(hmin_theta)
+            hmin_x = hmin*numpy.cos(hmin_theta)
+            hmin_y = hmin*numpy.sin(hmin_theta)
 
             plt.plot(origin_x+hmin_x,origin_y+hmin_y,'r')
 
@@ -223,53 +200,120 @@ class variogram(np.ndarray):
 
         self.nugget = vnugget
 
-        self.theoretical,self.covariance = SpatProp.get_varmodel(
+        self.theoretical,self.covariance = self.get_varmodel(
             d,self.type,self.sill,self.range,self.nugget,**kwars)
 
     @staticmethod
-    def get_distance(A,B=None,returnDeltaFlag=False):
+    def get_dist(A,B):
 
-        if B is None:
-            B = A
+        dist = numpy.zeros((A.shape[0],A.shape[0]))
 
-        dx = A.x-B.x.reshape((-1,1))
-        dy = A.y-B.y.reshape((-1,1))
-        dz = A.z-B.z.reshape((-1,1))
+        for a,b in zip(A.T,B.T):
+            dist += (a-b.reshape((-1,1)))**2
 
-        if returnDeltaFlag:
-            return dx,dy,dz
-        else:
-            return np.sqrt(dx**2+dy**2+dz**2)
+        return numpy.sqrt(dist)
 
     @staticmethod
-    def get_varmodel(vbins,vtype,vsill,vrange,vnugget,power=1):
-            
-        theoretical = np.zeros_like(vbins)
-        
-        Co = vnugget
-        Cd = vsill-vnugget
-        
-        if vtype == 'power':
-            theoretical[vbins>0] = Co+Cd*(vbins[vbins>0])**power
-        elif vtype == 'spherical':
-            theoretical[vbins>0] = Co+Cd*(3/2*(vbins[vbins>0]/vrange)-1/2*(vbins[vbins>0]/vrange)**3)
-            theoretical[vbins>vrange] = vsill
-        elif vtype == 'exponential':
-            theoretical[vbins>0] = Co+Cd*(1-np.exp(-3*(vbins[vbins>0]/vrange)))
-        elif vtype == 'gaussian':
-            theoretical[vbins>0] = Co+Cd*(1-np.exp(-3*(vbins[vbins>0]/vrange)**2))
-        elif vtype == 'hole_effect':
-            theoretical[vbins>0] = Co+Cd*(1-np.sin((vbins[vbins>0]/vrange))/(vbins[vbins>0]/vrange))
+    def get_delta(A,B):
+        return A-B.reshape((-1,1))
 
-        covariance = vsill-theoretical
+    @staticmethod
+    def get_varmodel(model,*args,**kwargs):
+        return getattr(self,f"get_var{model}")(*args,**kwargs)
 
-        return theoretical,covariance
+    @staticmethod
+    def get_varpower(h,c,p=1,c0=0):
+        gamma = numpy.zeros_like(h)
+        gamma[h>0] = c0+(c-c0)*(h[h>0])**p
+        return gamma
+
+    @staticmethod
+    def get_varspherical(h,c,a,c0=0):
+        gamma = numpy.zeros_like(h)
+        ratio = h[h>0]/a
+        gamma[h>0] = c0+(c-c0)*(3/2*ratio-1/2*ratio**3)
+        gamma[h>a] = c
+        return gamma
+
+    @staticmethod
+    def get_varexponential(h,c,a,c0=0):
+        gamma = numpy.zeros_like(h)
+        ratio = h[h>0]/a
+        gamma[h>0] = c0+(c-c0)*(1-numpy.exp(-3*ratio))
+        return gamma
+
+    @staticmethod
+    def get_vargaussian(h,c,a,c0=0):
+        gamma = numpy.zeros_like(h)
+        ratio = h[h>0]/a
+        gamma[h>0] = c0+(c-c0)*(1-numpy.exp(-3*ratio**2))
+        return gamma
+
+    @staticmethod
+    def get_varholeeffect(h,c,a,c0=0):
+        gamma = numpy.zeros_like(h)
+        ratio = h[h>0]/a
+        gamma[h>0] = c0+(c-c0)*(1-numpy.sin(ratio)/ratio)
+        return gamma
+
+    @staticmethod
+    def get_varcubic(h,c,a,c0=0):
+        gamma = numpy.zeros_like(h)
+        ratio = h[h>0]/a
+        gamma[h>0] = c0+(c-c0)*(7*ratio**2-35/4*ratio**3+7/2*ratio**5-3/4*ratio**7)
+        gamma[h>a] = c
+        return gamma
+
+    @staticmethod
+    def get_varcauchy(h,c,a,c0=0):
+        gamma = numpy.zeros_like(h)
+        ratio = h[h>0]/a
+        gamma[h>0] = c0+(c-c0)*(1-1/(1+ratio**2))
+        return gamma
+
+    @staticmethod
+    def get_vardewijs(h,c,c0=0):
+        gamma = numpy.zeros_like(h)
+        gamma[h>0] = c0+(c-c0)*numpy.log(h[h>0])
+        return gamma
 
 if __name__ == "__main__":
 
-    A = SpatProp(np.array([[1,2,3,4]]))
+    import matplotlib.pyplot as plt
+    import numpy as np
 
-    A.set_connection()
+    A = variogram([1,2,3,4],x=[0.1,0.2,0.3,0.4])
 
-    A.set_experimentalVariogram()
+    print(A.distmat)
+
+    h = np.linspace(0,40,1000)
+
+    c = 1
+    a = 10
+    c0 = 0.1
+
+    gamma1 = A.get_varpower(h,c,p=0.2,c0=c0)
+    gamma2 = A.get_varspherical(h,c,a,c0=c0)
+    gamma3 = A.get_varexponential(h,c,a,c0=c0)
+    gamma4 = A.get_vargaussian(h,c,a,c0=c0)
+    gamma5 = A.get_varholeeffect(h,c,a,c0=c0)
+    gamma6 = A.get_varcubic(h,c,a,c0=c0)
+    gamma7 = A.get_varcauchy(h,c,a,c0=c0)
+    gamma8 = A.get_vardewijs(h,c,c0=c0)
+
+    plt.plot(h[1:],gamma1[1:],label="1")
+    plt.plot(h[1:],gamma2[1:],label="2")
+    plt.plot(h[1:],gamma3[1:],label="3")
+    plt.plot(h[1:],gamma4[1:],label="4")
+    plt.plot(h[1:],gamma5[1:],label="5")
+    plt.plot(h[1:],gamma6[1:],label="6")
+    plt.plot(h[1:],gamma7[1:],label="7")
+    plt.plot(h[1:],gamma8[1:],label="8")
+
+    plt.xlim([0,40])
+    plt.ylim(ymin=0)
+
+    plt.legend()
+
+    plt.show()
 

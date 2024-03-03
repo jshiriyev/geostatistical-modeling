@@ -7,7 +7,7 @@ from scipy.stats import norm
 
 # from geomodel.connectivity import SpatProp
 
-class kriging():
+class Kriging():
 
     def __init__(self,obsSpatProp,estSpatProp):
         

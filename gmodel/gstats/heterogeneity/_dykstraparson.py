@@ -4,7 +4,7 @@ import numpy
 
 from scipy.stats import norm
 
-class dykstraparson():
+class DykstraParson():
     """
     Calculates Dykstra-Parson coefficient for permeability and
     thickness (optional) values.

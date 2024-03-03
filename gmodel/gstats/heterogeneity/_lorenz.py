@@ -2,7 +2,7 @@ from matplotlib import pyplot
 
 import numpy
 
-class lorenz():
+class Lorenz():
     """
     Calculates Lorenz coefficient for permeability, porosity and
     thickness values.
