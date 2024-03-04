@@ -27,8 +27,8 @@ class Experimental:
     @property
     def anisoparams(self):
         return {
-            "azimuth"   : numpy.radian(self.azimuth),
-            "azimtol"   : numpy.radian(self.azimtol),
+            "azimuth"   : numpy.radians(self.azimuth),
+            "azimtol"   : numpy.radians(self.azimtol),
             "bdwidth"   : self.bdwidth
             }
 
@@ -64,7 +64,7 @@ class Variogram():
         thetadelta = numpy.abs(data.azimmat-kwargs["azimuth"])
 
         atolbool = thetadelta<=kwargs["azimtol"]
-        bandbool = numpy.sin(thetadelta)*data.distmat<=(bdwidth/2.)
+        bandbool = numpy.sin(thetadelta)*data.distmat<=(kwargs['bdwidth']/2.)
         
         return numpy.logical_and(atolbool,bandbool)
 
@@ -97,14 +97,13 @@ class Variogram():
 
         exp = Experimental(**kwargs).params
 
-        return numpy.arange(
-            exp['lagdist'],
+        return numpy.arange(0,
             exp['outbound']+exp['lagdist']/2,
             exp['lagdist']
             )
 
     @staticmethod
-    def experimental(data:Spatial,**kwargs:Experimental.anisoparams):
+    def experimental(data:Spatial,**kwargs:Experimental):
         """anisoparams calculations are carried only in 2D space:
 
         azimuth : search direction, range is (-pi,pi] in radians
@@ -124,7 +123,7 @@ class Variogram():
         
         for i,h in enumerate(bins):
 
-            dbool = numpy.abs(data.distmat-h)<=lagtol
+            dbool = numpy.abs(data.distmat-h)<=exp.params['lagtol']
             cbool = numpy.logical_and(dbool,abool)
 
             N = numpy.count_nonzero(cbool)
