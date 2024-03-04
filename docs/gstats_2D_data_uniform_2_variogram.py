@@ -48,6 +48,8 @@ gamma2 = var.experimental(data,**exp2.params)
 gamma3 = var.experimental(data,**exp3.params)
 gamma4 = var.experimental(data,**exp4.params)
 
+print(data.azimmat)
+
 # print(gamma1)
 # print(gamma2)
 # print(gamma3)
