@@ -8,7 +8,7 @@ sys.path.append(r'C:\\Users\\3876yl\\Documents\\gmodel')
 
 from utils._spatial import Spatial
 
-from gmodel.gstats._variogram import Variogram
+from gmodel.gstats._variogram import Variogram as var
 from gmodel.gstats._variogram import Experimental
 from gmodel.gstats._variogram import Theoretical
 
@@ -36,24 +36,10 @@ exp2 = Experimental(1,0.5,4,90,1,1)
 exp3 = Experimental(np.sqrt(2),np.sqrt(2)/2,np.sqrt(2)*4,45,5,0.1)
 exp4 = Experimental(np.sqrt(2),np.sqrt(2)/2,np.sqrt(2)*4,135,5,0.1)
 
-var = Variogram()
-
-bins1 = var.bins(**exp1.params)
-bins2 = var.bins(**exp2.params)
-bins3 = var.bins(**exp3.params)
-bins4 = var.bins(**exp4.params)
-
-gamma1 = var.experimental(data,**exp1.params)
-gamma2 = var.experimental(data,**exp2.params)
-gamma3 = var.experimental(data,**exp3.params)
-gamma4 = var.experimental(data,**exp4.params)
-
-print(data.azimmat)
-
-# print(gamma1)
-# print(gamma2)
-# print(gamma3)
-# print(gamma4)
+gamma1,bins1 = var.experimental(data,exp1)
+gamma2,bins2 = var.experimental(data,exp2)
+gamma3,bins3 = var.experimental(data,exp3)
+gamma4,bins4 = var.experimental(data,exp4)
 
 plt.plot(bins1,gamma1,label="E-W")
 plt.scatter(bins1,gamma1)

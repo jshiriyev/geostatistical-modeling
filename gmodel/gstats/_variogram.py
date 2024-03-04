@@ -57,31 +57,29 @@ class Variogram():
         return data.distmat[data.distmat!=0].min()
 
     @staticmethod
-    def azimbool(data:Spatial,**kwargs:Experimental.anisoparams):
+    def azimbool(data:Spatial,exp:Experimental):
 
-        kwargs = Experimental(**kwargs).anisoparams
+        params = exp.anisoparams
 
-        thetadelta = numpy.abs(data.azimmat-kwargs["azimuth"])
+        thetadelta = numpy.abs(data.azimmat-params["azimuth"])
 
-        atolbool = thetadelta<=kwargs["azimtol"]
-        bandbool = numpy.sin(thetadelta)*data.distmat<=(kwargs['bdwidth']/2.)
+        atolbool = thetadelta<=params["azimtol"]
+        bandbool = numpy.sin(thetadelta)*data.distmat<=(params['bdwidth']/2.)
         
         return numpy.logical_and(atolbool,bandbool)
 
     @staticmethod
-    def anisolag(data:Spatial,**kwargs:Experimental.anisoparams):
+    def anisolag(data:Spatial,exp:Experimental):
 
-        kwargs = Experimental(**kwargs).anisoparams
-
-        azimbool = Variogram.azimbool(data,**kwargs)
+        azimbool = Variogram.azimbool(data,exp)
         azimbool = numpy.logical_and(data.distmat!=0,azimbool)
 
         return data.distmat[azimbool].min()
 
     @staticmethod
-    def outbound(data:Spatial,**kwargs:Experimental.anisoparams):
+    def outbound(data:Spatial,exp:Experimental):
 
-        azimuth = Experimental(**kwargs).anisoparams['azimuth']
+        azimuth = exp.anisoparams['azimuth']
 
         xmax = numpy.abs(data.xdelta).max()
 
@@ -93,17 +91,15 @@ class Variogram():
         return min(xmax/costheta,ymax/sintheta)
 
     @staticmethod
-    def bins(**kwargs:Experimental.params):
+    def bins(exp:Experimental):
 
-        exp = Experimental(**kwargs).params
-
-        return numpy.arange(0,
-            exp['outbound']+exp['lagdist']/2,
-            exp['lagdist']
+        return numpy.arange(exp.params['lagdist'],
+            exp.params['outbound']+exp.params['lagdist']/2,
+            exp.params['lagdist']
             )
 
     @staticmethod
-    def experimental(data:Spatial,**kwargs:Experimental):
+    def experimental(data:Spatial,exp:Experimental):
         """anisoparams calculations are carried only in 2D space:
 
         azimuth : search direction, range is (-pi,pi] in radians
@@ -114,14 +110,12 @@ class Variogram():
         
         delta = data.delta**2
 
-        exp = Experimental(**kwargs)
+        abool = Variogram.azimbool(data,exp)
+        hbins = Variogram.bins(exp)
 
-        abool = Variogram.azimbool(data,**exp.anisoparams)
-        bins  = Variogram.bins(**exp.params)
-
-        gamma = numpy.zeros_like(bins)
+        gamma = numpy.zeros_like(hbins)
         
-        for i,h in enumerate(bins):
+        for i,h in enumerate(hbins):
 
             dbool = numpy.abs(data.distmat-h)<=exp.params['lagtol']
             cbool = numpy.logical_and(dbool,abool)
@@ -130,46 +124,58 @@ class Variogram():
 
             gamma[i] = numpy.nan if N==0 else delta[cbool].sum()/(2*N)
 
-        return gamma
+        return gamma,hbins
 
     @staticmethod
-    def azimtol(outbound,_azimtol,bdwidth):
-        return numpy.arcsin(min(numpy.sin(_azimtol),bdwidth/outbound))
+    def azimtol(exp:Experimental):
+
+        params = exp.anisoparams
+
+        theta1 = numpy.sin(params['azimtol'])
+        theta2 = params['bdwidth']/exp.params['outbound']
+
+        return numpy.arcsin(min(theta1,theta2))
 
     @staticmethod
-    def bdwidth(outbound,azimtol,_bdwidth):
-        return min(_bdwidth,outbound*numpy.sin(azimtol))
+    def bdwidth(exp:Experimental):
+
+        params = exp.anisoparams
+
+        width1 = params['bdwidth']
+        width2 = exp.params['outbound']*numpy.sin(params['azimtol'])
+
+        return min(width1,width2)
 
     @staticmethod
-    def searchbox(xorigin=0,yorigin=0,**kwargs:Experimental):
+    def searchbox(exp:Experimental,xorigin=0,yorigin=0):
         """
         alpha  : azimuth_tol at bandwidth dominated section
         omega  : bandwidth at azimuth_tol dominated section
         theta  : azimuth range at the specified distance
         """
 
-        exp = Experimental(**kwargs)
+        alpha = Variogram.azimtol(exp)
+        omega = Variogram.bdwidth(exp)
 
-        alpha = Variogram.azimtol(exp.outbound,exp.azimtol,exp.bdwidth)
-        omega = Variogram.bdwidth(exp.outbound,exp.azimtol,exp.bdwidth)
+        params = exp.anisoparams
 
-        theta = numpy.linspace(exp.azimuth-alpha,exp.azimuth+alpha)
-        sides = omega/numpy.sin(exp.azimtol)
+        theta = numpy.linspace(params['azimuth']-alpha,params['azimuth']+alpha)
+        sides = omega/numpy.sin(params['azimtol'])
 
-        xO1 = exp.outbound*numpy.cos(exp.azimuth)
-        yO1 = exp.outbound*numpy.sin(exp.azimuth)
+        xO1 = exp.outbound*numpy.cos(params['azimuth'])
+        yO1 = exp.outbound*numpy.sin(params['azimuth'])
 
-        xO2 = exp.outbound*numpy.cos(exp.azimuth-alpha)
-        yO2 = exp.outbound*numpy.sin(exp.azimuth-alpha)
+        xO2 = exp.outbound*numpy.cos(params['azimuth']-alpha)
+        yO2 = exp.outbound*numpy.sin(params['azimuth']-alpha)
 
-        xO3 = exp.outbound*numpy.cos(exp.azimuth+alpha)
-        yO3 = exp.outbound*numpy.sin(exp.azimuth+alpha)
+        xO3 = exp.outbound*numpy.cos(params['azimuth']+alpha)
+        yO3 = exp.outbound*numpy.sin(params['azimuth']+alpha)
 
-        xO4 = sides*numpy.cos(exp.azimuth-exp.azimtol)
-        yO4 = sides*numpy.sin(exp.azimuth-exp.azimtol)
+        xO4 = sides*numpy.cos(params['azimuth']-params['azimtol'])
+        yO4 = sides*numpy.sin(params['azimuth']-params['azimtol'])
 
-        xO5 = sides*numpy.cos(exp.azimuth+exp.azimtol)
-        yO5 = sides*numpy.sin(exp.azimuth+exp.azimtol)
+        xO5 = sides*numpy.cos(params['azimuth']+params['azimtol'])
+        yO5 = sides*numpy.sin(params['azimuth']+params['azimtol'])
 
         x1 = numpy.linspace(0,xO1)
         y1 = numpy.linspace(0,yO1)
@@ -200,8 +206,8 @@ class Variogram():
             
             hmin = h-exp.lagtol
             
-            hmin_alpha = Variogram.azimtol(hmin,exp.azimtol,exp.bdwidth)
-            hmin_theta = numpy.linspace(exp.azimuth-hmin_alpha,exp.azimuth+hmin_alpha)
+            hmin_alpha = Variogram.azimtol(hmin,params['azimtol'],params['bdwidth'])
+            hmin_theta = numpy.linspace(params['azimuth']-hmin_alpha,params['azimuth']+hmin_alpha)
             
             hmin_x = hmin*numpy.cos(hmin_theta)
             hmin_y = hmin*numpy.sin(hmin_theta)
@@ -209,16 +215,14 @@ class Variogram():
             pyplot.plot(xorigin+hmin_x,yorigin+hmin_y,'r')
 
     @staticmethod
-    def theoretical(bins,**kwargs:Theoretical.params):
+    def theoretical(bins,theory:Theoretical):
 
-        kwargs = Theoretical(**kwargs).params
-
-        return Variogram.get_varmodel(bins,**kwargs)
+        return Variogram.get_varmodel(bins,theory)
 
     @staticmethod
-    def get_varmodel(bins,**kwargs:Theoretical.params):
+    def get_varmodel(bins,theory:Theoretical):
 
-        kwargs = Theoretical(**kwargs).params
+        kwargs = theory.params
 
         try:
             model = kwargs.pop("model")
