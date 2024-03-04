@@ -16,84 +16,72 @@ from gstats.connectivity import variogram
 
 class TestVariogram(unittest.TestCase):
 
-##    def setUp(self):
-
     def test_variogram00(self):
 
-        class data: pass
-
-##z = np.array([[32,24,20,10],
-##              [28,20,17,12],
-##              [12,16,10,9],
-##              [18,12,7,8]])
-##
-##V = variogram(props=z,dX=10,dY=10)
-##
-##V.set_distance()
-##
-##V.set_experimental(10,30,90,3)
-##
-##plt.scatter(V.bins,V.experimental)
-##
-##plt.show()
-
-        # data.X = np.array([0,0,0,0,10,10,10,10,20,20,20,20,30,30,30,30])
-        # data.Y = np.array([0,10,20,30,0,10,20,30,0,10,20,30,0,10,20,30])
-        # data.Z = np.array([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
-
-        # data.F = np.array([32,24,20,10,28,20,17,12,12,16,10,9,18,12,7,8])
-
-        # var = variogram(data)
-
-        # var.set_bins(20,20)
-        # var.set_experimental(lagdip=90,lagdiptol=2)
-        # exp1 = var.experimental
-
-        # var.set_bins(20*np.sqrt(2),20*np.sqrt(2))
-        # var.set_experimental(lagdip=45,lagdiptol=10)
-        # exp2 = var.experimental
+        z = np.array([[32,24,20,10],
+                     [28,20,17,12],
+                     [12,16,10,9],
+                     [18,12,7,8]])
         
-        # np.testing.assert_equal([exp1,exp2],[44.6875,161.75])
+        V = variogram(props=z,dX=10,dY=10)
+        
+        V.set_distance()
+        
+        V.set_experimental(10,30,90,3)
+        
+        data.X = np.array([0,0,0,0,10,10,10,10,20,20,20,20,30,30,30,30])
+        data.Y = np.array([0,10,20,30,0,10,20,30,0,10,20,30,0,10,20,30])
+        data.Z = np.array([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
+
+        data.F = np.array([32,24,20,10,28,20,17,12,12,16,10,9,18,12,7,8])
+
+        var = variogram(data)
+
+        var.set_bins(20,20)
+        var.set_experimental(lagdip=90,lagdiptol=2)
+        exp1 = var.experimental
+
+        var.set_bins(20*np.sqrt(2),20*np.sqrt(2))
+        var.set_experimental(lagdip=45,lagdiptol=10)
+        exp2 = var.experimental
+        
+        np.testing.assert_equal([exp1,exp2],[44.6875,161.75])
 
     def test_variogram01(self):
 
-        pass
-
-        # class data: pass
-
-        # sheets = {
-        #     "num_cols": 3,
-        #     "dataTypes": "col"
-        #     }
+        sheets = {
+            "num_cols": 3,
+            "dataTypes": "col"
+            }
         
-        # setup('variogram01.csv',sheets,data)
+        setup('variogram01.csv',sheets,data)
 
-        # var = variogram(data)
+        var = variogram(data)
 
-        # var.set_bins(1,4)
+        var.set_bins(1,4)
 
-        # act1 = np.array([6.411,9.490,10.575,10.547])
-        # var.set_experimental(lagdip=0,lagdiptol=2)
-        # exp1 = var.experimental
+        act1 = np.array([6.411,9.490,10.575,10.547])
+        var.set_experimental(lagdip=0,lagdiptol=2)
+        exp1 = var.experimental
 
-        # act2 = np.array([4.982,8.750,10.675,12.953])
-        # var.set_experimental(lagdip=90,lagdiptol=2)
-        # exp2 = var.experimental
+        act2 = np.array([4.982,8.750,10.675,12.953])
+        var.set_experimental(lagdip=90,lagdiptol=2)
+        exp2 = var.experimental
 
-        # var.set_bins(1*np.sqrt(2),4*np.sqrt(2))
+        var.set_bins(1*np.sqrt(2),4*np.sqrt(2))
 
-        # act3 = np.array([7.459,13.194,19.280,18.406])
-        # var.set_experimental(lagdip=45,lagdiptol=2)
-        # exp3 = var.experimental
+        act3 = np.array([7.459,13.194,19.280,18.406])
+        var.set_experimental(lagdip=45,lagdiptol=2)
+        exp3 = var.experimental
 
-        # act4 = np.array([7.806,13.431,10.680,12.625])
-        # var.set_experimental(lagdip=-45,lagdiptol=2)
-        # exp4 = var.experimental
+        act4 = np.array([7.806,13.431,10.680,12.625])
+        var.set_experimental(lagdip=-45,lagdiptol=2)
+        exp4 = var.experimental
         
-        # np.testing.assert_array_almost_equal(exp1,act1,decimal=3)
-        # np.testing.assert_array_almost_equal(exp2,act2,decimal=3)
-        # np.testing.assert_array_almost_equal(exp3,act3,decimal=3)
-        # np.testing.assert_array_almost_equal(exp4,act4,decimal=3)
+        np.testing.assert_array_almost_equal(exp1,act1,decimal=3)
+        np.testing.assert_array_almost_equal(exp2,act2,decimal=3)
+        np.testing.assert_array_almost_equal(exp3,act3,decimal=3)
+        np.testing.assert_array_almost_equal(exp4,act4,decimal=3)
 
 if __name__ == '__main__':
 
