@@ -1,51 +1,46 @@
-import os
-import sys
-
-import numpy as np
+import numpy
 
 from scipy.stats import norm
 
-# from geomodel.connectivity import SpatProp
+from gmodel.utils._spatial import Spatial
+
+from gmodel.gstats._variogram import Variogram
 
 class Kriging():
 
-    def __init__(self,obsSpatProp,estSpatProp):
-        
-        # super(kriging,self).__init__(None,**kwargs)
-        
-        self.obs = obsSpatProp
-        self.est = estSpatProp
-
-    def simple(self,mean=None):
+    @staticmethod
+    def simple(obsdata:Spatial,estdata:Spatial,mean:float=None):
 
         if mean is None:
-            self.mean = self.obs.mean()
+            self.mean = obsdata.mean()
         else:
             self.mean = mean
         
         "perc -> percentile, perc=0.5 gives mean values"
 
-        self.distance = SpatProp.get_distance(self.est,self.obs)
+        self.distance = estdata.distmat(obsdata)
         
         _,self.covariance = SpatProp.get_varmodel(
             self.distance,self.obs.type,
             self.obs.sill,self.obs.range,
             self.obs.nugget)
 
-        self.lambdas = np.linalg.solve(self.obs.covariance,self.covariance)
+        self.lambdas = numpy.linalg.solve(self.obs.covariance,self.covariance)
         
         calc_diff_arr = self.obs.reshape((-1,1))-self.mean
         calc_prop_mat = self.lambdas*(calc_diff_arr)
         calc_vars_mat = self.lambdas*self.covariance
         
-        self.property = self.mean+calc_prop_mat.sum(axis=0)
-        self.variance = self.obs.sill-calc_vars_mat.sum(axis=0)
+        estimate = self.mean+calc_prop_mat.sum(axis=0)
+        variance = self.obs.sill-calc_vars_mat.sum(axis=0)
 
-    def ordinary(self):
-        
-        "perc -> percentile, perc=0.5 gives mean values"
+        return estimate,variance
 
-        self.distance = SpatProp.get_distance(self.est,self.obs)
+    @staticmethod
+    def ordinary(obsdata:Spatial,estdata:Spatial):
+        """perc -> percentile, perc=0.5 gives mean values"""
+
+        self.distance = estdata.distmat(obsdata)
         
         _,self.covariance = SpatProp.get_varmodel(
             self.distance,self.obs.type,
@@ -53,17 +48,17 @@ class Kriging():
             self.obs.nugget)
         
         Am = self.var.covariance
-        Ar = np.ones(Am.shape[0]).reshape((-1,1))
-        Ab = np.ones(Am.shape[0]).reshape((1,-1))
-        Ab = np.append(Ab,np.array([[0]]),axis=1)
-        Am = np.append(Am,Ar,axis=1)
-        Am = np.append(Am,Ab,axis=0)
+        Ar = numpy.ones(Am.shape[0]).reshape((-1,1))
+        Ab = numpy.ones(Am.shape[0]).reshape((1,-1))
+        Ab = numpy.append(Ab,numpy.array([[0]]),axis=1)
+        Am = numpy.append(Am,Ar,axis=1)
+        Am = numpy.append(Am,Ab,axis=0)
 
         bm = self.covariance
-        bb = np.ones(bm.shape[1]).reshape((1,-1))
-        bm = np.append(bm,bb,axis=0)
+        bb = numpy.ones(bm.shape[1]).reshape((1,-1))
+        bm = numpy.append(bm,bb,axis=0)
 
-        xm = np.linalg.solve(Am,bm)
+        xm = numpy.linalg.solve(Am,bm)
         
         self.lambdas = xm[:-1,:]
         self.beta = xm[-1,:]
@@ -71,15 +66,12 @@ class Kriging():
         calc_prop_mat = self.lambdas*self.obs.reshape((-1,1))
         calc_vars_mat = self.lambdas*self.covariance
 
-        self.property = calc_prop_mat.sum(axis=0)
-        self.variance = self.sill-self.beta-calc_vars_mat.sum(axis=0)
+        estimate = calc_prop_mat.sum(axis=0)
+        variance = self.sill-self.beta-calc_vars_mat.sum(axis=0)
 
-    def get_percentile(self,perc=0.5):
+        return estimate,variance
 
-        return self.property+norm.ppf(perc)*np.sqrt(self.variance)
-
-    def gaussian_simulation(self):
-
-        perc = np.random.rand(self.x.size)
-
-        self.get_percentile(perc=perc)
+    @staticmethod
+    def percentile(estimate,variance,perc=0.5):
+        """perc -> percentile, perc=0.5 gives mean values"""
+        return estimate+norm.ppf(perc)*numpy.sqrt(variance)

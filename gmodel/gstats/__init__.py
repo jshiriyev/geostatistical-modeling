@@ -1,5 +1,5 @@
-from ._heterogeneity import DykstraParson
-from ._heterogeneity import Lorenz
+from ._smeasures import DykstraParson
+from ._smeasures import LorenzCoeff
 
 from ._preprocess import Decluster
 from ._variogram import Variogram
