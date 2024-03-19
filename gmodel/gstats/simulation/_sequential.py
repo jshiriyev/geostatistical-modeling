@@ -6,7 +6,7 @@ from gmodel.gstats._variogram import Variogram
 
 from gmodel.gstats._kriging import Kriging
 
-class Simulation():
+class Sequential():
 
     @staticmethod
     def gaussian(estimate,variance):

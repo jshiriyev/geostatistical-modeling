@@ -22,7 +22,10 @@ class Ordinary():
 	def estimate(self,est:Spatial):
 		"""Returns the best estimated values and varitation for est data."""
 
-		sol = numpy.linalg.solve(self.lhs(),self.rhs(est))
+		sol = numpy.linalg.solve(
+			self._lefthandside(),
+			self._righthandside(est)
+			)
 
 		lamda,beta = sol[:-1,:],sol[-1,:]
 
@@ -44,47 +47,47 @@ class Ordinary():
 
 		return est+norm.ppf(frac)*numpy.sqrt(var)
 
-	def dmat(self,est:Spatial=None):
+	def _distmat(self,est:Spatial=None):
 		"""Constructs distance matrix for est (m,) and obs (n,) data.
 		Returned matrix shape is (m,n)."""
 		est = self._obs if est is None else est
 		return est.get_distmat(self._obs)
 
-	def vmat(self,est:Spatial=None):
+	def _varmat(self,est:Spatial=None):
 		"""Constructs variogram matrix for est (m,) and obs (n,) data.
 		Returned matrix shape is (m,n)."""
-		return self._var(self.dmat(est))
+		return self._var(self._distmat(est))
 
-	def cmat(self,est:Spatial=None):
+	def _covmat(self,est:Spatial=None):
 		"""Constructs covariance matrix for est (m,) and obs (n,) data.
 		Returned matrix shape is (m,n)."""
-		return self._var.sill-self.vmat(est)
+		return self._var.sill-self._varmat(est)
 
-	def lhs(self):
+	def _lefthandside(self):
 		"""Constructs the left-hand-side matrix for ordinary kriging calculations."""
 
-		cmat = self.cmat()
+		cmat = self._covmat()
 
-		cmat = self.colappend(cmat)
-		cmat = self.rowappend(cmat)
+		cmat = self._colappend(cmat)
+		cmat = self._rowappend(cmat)
 
 		cmat[-1,-1] = 0
 
 		return cmat
 
-	def rhs(self,est:Spatial):
+	def _righthandside(self,est:Spatial):
 		"""Constructs the right-hand-side matrix for ordinary kriging calculations."""
 
-		self.__crhs = self.cmat(est)
+		self.__crhs = self._covmat(est)
 
-		return self.rowappend(self.__crhs)
+		return self._rowappend(self.__crhs)
 
 	@staticmethod
-	def colappend(mat):
+	def _colappend(mat):
 		return numpy.append(mat,numpy.ones(mat.shape[0]).reshape((-1,1)),axis=1)
 
 	@staticmethod
-	def rowappend(mat):
+	def _rowappend(mat):
 		return numpy.append(mat,numpy.ones(mat.shape[1]).reshape((1,-1)),axis=0)
 
 if __name__ == "__main__":
