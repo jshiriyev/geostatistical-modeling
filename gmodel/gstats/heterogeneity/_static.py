@@ -51,9 +51,10 @@ class StatMeasures():
 
         return numpy.sqrt(self.var(param))
 
-    def varcoeff(self,param="perm"):
+    @property
+    def varcoeff(self):
 
-        return self.std(param)/self.mean(param)
+        return self.std("perm")/self.mean("perm")
 
     def sort(self,*args,flip=False):
 
@@ -117,6 +118,11 @@ class StatMeasures():
         area = numpy.trapz(ffrac,sfrac)
         
         return (area-0.5)/0.5
+
+    @property
+    def gelhar(self):
+
+        pass
 
     def show_DP(self,axis):
 

@@ -1,54 +1,9 @@
-from dataclasses import dataclass
-
 from matplotlib import pyplot
 
 import numpy
 
-from utils._spatial import Spatial
-
-@dataclass(frozen=True)
-class Experimental:
-    """It is a variogram property dictionary."""
-    lagdist     : float = None
-    lagtol      : float = None
-    outbound    : float = None
-    azimuth     : float = 0.0
-    azimtol     : float = numpy.pi
-    bdwidth     : float = numpy.inf
-
-    @property
-    def params(self):
-        return {
-            "lagdist"   : self.lagdist,
-            "lagtol"    : self.lagtol,
-            "outbound"  : self.outbound
-            }
-    
-    @property
-    def anisoparams(self):
-        return {
-            "azimuth"   : numpy.radians(self.azimuth),
-            "azimtol"   : numpy.radians(self.azimtol),
-            "bdwidth"   : self.bdwidth
-            }
-
-@dataclass(frozen=True)
-class Theoretical:
-    """It is a variogram property dictionary."""
-    model       : str   = "spherical"
-    sill        : float = None
-    vrange      : float = None
-    power       : float = None
-    nugget      : float = 0.0
-
-    @property
-    def params(self):
-        return {
-            "sill"      : self.sill,
-            "vrange"    : self.vrange,
-            "power"     : self.power,
-            "nugget"    : self.nugget
-            }
+from gmodel.gstats.variogram import Experimental
+from gmodel.gstats.variogram import Theoretical
 
 class Variogram():
 
@@ -230,62 +185,6 @@ class Variogram():
             model = 'spherical'
 
         return getattr(Variogram,f"get_var{model}")(bins,**kwargs)
-
-    @staticmethod
-    def get_varpower(bins,sill,power=1,nugget=0):
-        gamma = numpy.zeros_like(bins)
-        gamma[bins>0] = nugget+(sill-nugget)*(bins[bins>0])**power
-        return gamma
-
-    @staticmethod
-    def get_varspherical(bins,sill,vrange,nugget=0):
-        gamma = numpy.zeros_like(bins)
-        ratio = bins[bins>0]/vrange
-        gamma[bins>0] = nugget+(sill-nugget)*(3/2*ratio-1/2*ratio**3)
-        gamma[bins>vrange] = sill
-        return gamma
-
-    @staticmethod
-    def get_varexponential(bins,sill,vrange,nugget=0):
-        gamma = numpy.zeros_like(bins)
-        ratio = bins[bins>0]/vrange
-        gamma[bins>0] = nugget+(sill-nugget)*(1-numpy.exp(-3*ratio))
-        return gamma
-
-    @staticmethod
-    def get_vargaussian(bins,sill,vrange,nugget=0):
-        gamma = numpy.zeros_like(bins)
-        ratio = bins[bins>0]/vrange
-        gamma[bins>0] = nugget+(sill-nugget)*(1-numpy.exp(-3*ratio**2))
-        return gamma
-
-    @staticmethod
-    def get_varholeeffect(bins,sill,vrange,nugget=0):
-        gamma = numpy.zeros_like(bins)
-        ratio = bins[bins>0]/vrange
-        gamma[bins>0] = nugget+(sill-nugget)*(1-numpy.sin(ratio)/ratio)
-        return gamma
-
-    @staticmethod
-    def get_varcubic(bins,sill,vrange,nugget=0):
-        gamma = numpy.zeros_like(bins)
-        ratio = bins[bins>0]/vrange
-        gamma[bins>0] = nugget+(sill-nugget)*(7*ratio**2-35/4*ratio**3+7/2*ratio**5-3/4*ratio**7)
-        gamma[bins>vrange] = sill
-        return gamma
-
-    @staticmethod
-    def get_varcauchy(bins,sill,vrange,nugget=0):
-        gamma = numpy.zeros_like(bins)
-        ratio = bins[bins>0]/vrange
-        gamma[bins>0] = nugget+(sill-nugget)*(1-1/(1+ratio**2))
-        return gamma
-
-    @staticmethod
-    def get_vardewijs(bins,sill,nugget=0):
-        gamma = numpy.zeros_like(bins)
-        gamma[bins>0] = nugget+(sill-nugget)*numpy.log(bins[bins>0])
-        return gamma
 
 if __name__ == "__main__":
 

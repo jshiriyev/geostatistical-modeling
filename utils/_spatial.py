@@ -84,8 +84,9 @@ if __name__ == "__main__":
 
     u = Spatial([5,6,7,8],[0,1,2,3],[0,1,2,3])
 
-    print(u.xdelta)
-    print(u.xaxis)
+    # print(u)
+    # print(u.xdelta)
+    # print(u.xaxis)
     print(u.distmat)
-    print(u.azimmat)
+    # print(u.azimmat)
 

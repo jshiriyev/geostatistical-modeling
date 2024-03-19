@@ -2,16 +2,6 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-if __name__ == '__main__':
-	import dirsetup
-
-from gstats.estimation import kriging
-
-# class observation: pass
-# class estimation: pass
-
-# sheets = {"num_cols": 4,"dataTypes": "col"}
-
 # setup('observation.csv',sheets,observation)
 
 # plt.figure(1)
@@ -39,10 +29,10 @@ from gstats.estimation import kriging
 
 # [Xmesh,Ymesh] = np.meshgrid(Xlin,Ylin)
 
-# observation.type = 'spherical'
-# observation.nugget = 0
-# observation.sill = 0.001
-# observation.range = 500
+# type = 'spherical'
+# nugget = 0
+# sill = 0.001
+# range = 500
 
 # estimation.X = Xmesh.flatten()
 # estimation.Y = Ymesh.flatten()
@@ -53,7 +43,7 @@ from gstats.estimation import kriging
 # estimation = kriging(observation).simple(estimation)
 
 # ##Zmesh = griddata((X,Y),Z,(Xmesh,Ymesh),method='linear');
-# ##
+#
 # plt.figure(2)
 
 # plt.contourf(Xmesh,Ymesh,estimation.F_variance.reshape(201,201));
