@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import lasio
 
 from matplotlib import colors as mcolors
@@ -24,6 +26,14 @@ import numpy
 from ._items import Zone
 
 from ._surface import Surface
+
+@dataclass
+class Zone:
+    """It is a formation surface item dictionary."""
+    name: str
+    field: str = None
+    color: str = "white"
+    hatch: str = ".."
 
 class Formation():
     """It is a collection of surfaces"""

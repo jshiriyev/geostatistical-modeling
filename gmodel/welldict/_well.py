@@ -1,9 +1,23 @@
+from dataclasses import dataclass
+
 from matplotlib import pyplot
 
 import numpy
 
 from ._items import Slot
 from ._items import Zone
+
+@dataclass
+class Slot:
+    """It is a well item dictionary."""
+    name: str
+    index: int = None
+    field: str = None
+    platform: str = None
+    xhead: float = 0.0
+    yhead: float = 0.0
+    datum: float = 0.0
+    status: str = "prospect"
 
 class Well(Slot):
 
@@ -16,6 +30,8 @@ class Well(Slot):
 		self.zones = []
 
 		self.lasfiles = []
+
+		self.diagram = None
 
 	def add_survey(self,survey):
 
