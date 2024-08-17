@@ -1,4 +1,4 @@
-from ._items import Slot
+from ._well import Slot
 
 class Stock():
     """It is a binary search tree of wells"""
