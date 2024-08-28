@@ -5,6 +5,6 @@ class Zone:
     """It is a formation zone dictionary."""
 
     name    : str = None
-    field   : str = None
+    depth   : float = None
     color   : str = "white"
     hatch   : str = ".."

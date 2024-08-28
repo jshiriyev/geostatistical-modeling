@@ -14,9 +14,10 @@ gmodel/welly/_well.py
 gmodel/welly/items/__init__.py
 gmodel/welly/items/_drill.py
 gmodel/welly/items/_layout.py
-gmodel/welly/items/_perf.py
+gmodel/welly/items/_perfs.py
 gmodel/welly/items/_slot.py
 gmodel/welly/items/_survey.py
+gmodel/welly/items/_target.py
 gmodel/welly/items/_zone.py
 tests/test_fractures.py
 tests/test_gstats_kriging.py
