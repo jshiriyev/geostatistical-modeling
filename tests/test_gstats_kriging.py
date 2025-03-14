@@ -5,9 +5,6 @@ import unittest
 ##import matplotlib.pyplot as plt
 import numpy as np
 
-if __name__ == '__main__':
-    import dirsetup
-
 from gstats.connectivity import variogram
 from gstats.estimation import kriging
 

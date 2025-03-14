@@ -4,6 +4,8 @@ import datetime
 
 import pandas
 
+#IT IS USEFUL, PLEASE CHECK
+
 @dataclass
 class PerfData:
     """It is a perforation dictionary for a perf in a well."""
@@ -108,7 +110,7 @@ if __name__ == "__main__":
 
     print(perfs2.mapping)
 
-    # for d in dir(frame):
-    #     print(d)
+    # # for d in dir(frame):
+    # #     print(d)
 
     
