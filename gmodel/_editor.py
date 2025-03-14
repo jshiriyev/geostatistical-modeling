@@ -51,7 +51,24 @@ class Editor():
 
 		return numpy.logical_and(self.las.index>=dmin,self.las.index<=dmax)
 
-	def crop(self,dmin:float=None,dmax:float=None):
+	def crop(self,key,dmin:float=None,dmax:float=None):
+		"""Crops a LAS curve to include only data within a specified depth range."""
+		return self.las[key].values[self.mask(dmin,dmax)]
+
+	def resample(self,key:str,depths:numpy.ndarray):
+		"""
+        Resample a curve's values based on new depth values.
+
+        Parameters:
+        key (str): Name of the curve to resample.
+        depths (array-like): New depth values for resampling.
+
+        Returns:
+        numpy.ndarray: Resampled curve values as a numpy array.
+        """
+		return numpy.interp(depths,self.las.index,self.las[key])
+
+	def cropfile(self,dmin:float=None,dmax:float=None):
 		"""
 	    Crops a LAS file to include only data within a specified depth range.
 
@@ -80,19 +97,6 @@ class Editor():
 	            )
 
 	    return cropped_las
-
-	def resample(self,key:str,depths:numpy.ndarray):
-		"""
-        Resample a curve's values based on new depth values.
-
-        Parameters:
-        key (str): Name of the curve to resample.
-        depths (array-like): New depth values for resampling.
-
-        Returns:
-        numpy.ndarray: Resampled curve values as a numpy array.
-        """
-		return numpy.interp(depths,self.las.index,self.las[key])
 
 	@staticmethod
 	def is_valid(values:numpy.ndarray):
