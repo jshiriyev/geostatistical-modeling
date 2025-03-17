@@ -1,34 +1,88 @@
+from dataclasses import dataclass
+
 import numpy
 
-from .items._slot import Slot
-
-from .items._target import Target
-
-from .items._drill import Drill
+from .items._drilling import Drilling
 
 from .items._layout import Layout
 from .items._survey import Survey
 
-from .items._zone import Zone
+from .items._zones import Zones
+from .items._perfs import Perf
 
-from .items._perfs import Perfs
+@dataclass
+class Name:
+
+    name : str
+
+    @staticmethod
+    def get(index:int,template:str) -> str:
+        """Generates a well name by formatting a given index into a string template.
+
+        Parameters:
+            index    : The well index (number)
+            template : A string template containing a placeholder (e.g., "Well-{}").
+        
+        Returns:
+            str: The formatted well name.
+
+        Raises:
+            ValueError: If the template does not contain a valid placeholder.
+        """
+        try:
+            return template.format(index)
+        except Error as e:
+            raise ValueError(f"Invalid template '{template}' for index '{index}'. Error: {e}")
+
+    @staticmethod
+    def digits(name:str) -> str:
+        """Returns digits or characters enclosed in single quotes from a given string.
+        If no match is found, returns the original string.
+
+        Parameters:
+        - name (str): The input string.
+
+        Returns:
+        - str: The extracted content inside single quotes, or the original string if no match is found.
+        """
+        match = re.search(r"'([^']*)'",name) # chatgpt suggested
+        # match = re.search(r"'(.*?)'",name) # previous version
+
+        return match.group(1) if match else name
+
+@dataclass
+class Slot:
+    """It is a slot dictionary for a well."""
+    index   : int = None
+
+    plt     : str = None
+
+    xhead   : float = 0.0
+    yhead   : float = 0.0
+    datum   : float = 0.0
 
 class Well():
     """It is a well dictionary with all sub classes."""
 
-    def __init__(self,name:str=None,field:str=None,status:str="active",
-        slot:dict=None,target:dict=None,drill:dict=None,layout:dict=None,survey:dict=None,zone:dict=None,perfs:dict=None):
+    def __init__(self,
+        name        : str,
+        status      : str = "active",
+        slot        : dict = None,
+        drilling    : dict = None,
+        layout      : dict = None,
+        survey      : dict = None,
+        zones       : dict = None,
+        perfs       : dict = None,
+        ):
 
         self.name   = name
-        self.field  = field
         self.status = status
 
         self.slot   = slot
-        self.target = target
-        self.drill  = drill
+        self.drilling  = drilling
         self.layout = layout
         self.survey = survey
-        self.zone   = zone
+        self.zones  = zone
         self.perfs  = perfs
 
     @property

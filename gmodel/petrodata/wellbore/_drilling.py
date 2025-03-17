@@ -1,12 +1,6 @@
 from dataclasses import dataclass
 
-import datetime
-
-@dataclass
-class Drilling:
-	"""It is a drilling dictionary for a well."""
-	start	: datetime.date = None
-	end		: datetime.date = None
+from datetime import date
 
 @dataclass
 class Target:
@@ -15,27 +9,20 @@ class Target:
 	y 		: float = None
 
 @dataclass
-class Slot:
-    """It is a slot dictionary for a well."""
-    index 	: int = None
+class Drilling:
+	"""It is a drilling dictionary for a well."""
+	start	: date = None
+	end		: date = None
 
-    plt 	: str = None
+	depth 	: float = None
 
-    xhead 	: float = 0.0
-    yhead 	: float = 0.0
-    datum 	: float = 0.0
-
-@dataclass
-class Casing:
-	"""It is a slot dictionary for a well."""
-	shoe 	: float = None
-	diam 	: float = None
+	## add target
 
 if __name__ == "__main__":
 
 	drill = Drilling(
-		datetime.date(1990,2,2),
-		datetime.date(1990,4,3),
+		date(1990,2,2),
+		date(1990,4,3),
 		)
 
 	print(drill.end)

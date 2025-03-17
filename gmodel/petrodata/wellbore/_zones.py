@@ -1,5 +1,5 @@
-class Zone():
-    """A class to store and utilize formation tops across the pphys."""
+class Zones():
+    """A class to store and utilize formation tops across the geom."""
 
     def __init__(self,**kwargs):
         """Initializes the Zone with named top values."""
@@ -28,8 +28,10 @@ class Zone():
 
     @property
     def keys(self):
+        """Getter for the formation keys."""
         return self._keys
 
     @property
     def tops(self):
+        """Getter for the formation tops."""
         return self._tops

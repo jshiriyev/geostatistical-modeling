@@ -1,16 +1,11 @@
 from dataclasses import dataclass, fields
 
-import datetime
-
-import pandas
-
-#IT IS USEFUL, PLEASE CHECK
+from datetime import date
 
 @dataclass
-class PerfData:
-    """It is a perforation dictionary for a perf in a well."""
-
-    date        : datetime.date = None
+class Perf:
+    """It is a dictionary for a perforation in a well."""
+    date        : date = None
 
     layer       : str = None
     interval    : str = None
@@ -18,99 +13,45 @@ class PerfData:
 
     @staticmethod
     def fields() -> list:
-        return [field.name for field in fields(PerfData)]
+        """Returns the list of field names in the Perf dataclass."""
+        return [f.name for f in fields(Perf)]
+
+    @staticmethod
+    def interval_to_list(interval:str,delimiter:str="-",decsep:str=".") -> list:
+        """Converts a string interval into a list of floats.
+
+        Parameters:
+        ----------
+        interval  : The interval string (e.g., "1005-1092").
+        delimiter : The delimiter separating depths in the interval. Defaults to "-".
+        decsep    : The decimal separator in the depth of the interval. Defaults to ".".
+        
+        Returns:
+        -------
+        List: A list containing one or two float values. If only one value
+            is provided, the second element will be None.
+        """
+        try:
+            depths = [float(depth.replace(decsep,'.')) for depth in interval.split(delimiter)]
+            if len(depths)==1:
+                depths.append(None)
+            elif len(depths) > 2:
+                raise ValueError(f"Unexpected format: '{interval}'. Expected format 'depth_1{delimiter}depth_2'.")
+            return depths
+        except ValueError as e:
+            raise ValueError(f"Invalid interval format: {interval}. Error: {e}")
 
 class Perfs():
 
-    def __init__(self,frame:pandas.DataFrame=None,mapping:dict=None):
-        """
-        Initialize the class with a DataFrame and a column mapping.
+    def __init__(self,*args):
 
-        Parameters:
-
-        frame (pd.DataFrame)    : The input DataFrame.
-
-        mapping (dict)          : A dictionary mapping class properties
-                                to DataFrame columns.
-        """
-        self.frame,self.mapping = frame,mapping
-
-        self.validate_mapping()
-
-    @property
-    def frame(self):
-        return self._frame
-
-    @frame.setter
-    def frame(self,value:pandas.DataFrame):
-        self._frame = pandas.DataFrame(columns=PerfData.fields()) if value is None else value
-
-    @property
-    def mapping(self):
-        return self._mapping
-
-    @mapping.setter
-    def mapping(self,value:dict):
-        self._mapping = {key:key for key in PerfData.fields()} if value is None else value
-
-    def validate_mapping(self):
-
-        wrong_keys = [key for key in self.mapping.keys() if key not in PerfData.fields()]
-
-        if wrong_keys:
-            raise ValueError(f"Mapping keys are: {', '.join(PerfData.fields())}")
-
-    def __getattr__(self,key):
-
-        if key in PerfData.fields():
-            return self.frame[self.mapping[key]].unique()
-
-        return getattr(self.frame,key)
+        self._list = list(args)
 
     def __getitem__(self,key):
 
-        if isinstance(key,int):
+        return self._list[key]
 
-            row = self.frame.iloc[key].to_dict()
+    def __getattr__(self,key):
 
-            return PerfData(**{key:row.get(value) for key,value in self.mapping.items()})
-
-        return getitem(self.frame,key)
-
-    @staticmethod
-    def interval_string_to_list(value:str,delimiter="-",decsep="."):
-
-        depths = value.split(delimiter)
-
-        depths = [float(depth.replace(decsep,'.')) for depth in depths]
-
-        if len(depths)==1:
-            depths.append(None)
-
-        return depths
-    
-if __name__ == "__main__":
-
-    frame = pandas.DataFrame(dict(
-        A=[datetime.date(2020,1,1),datetime.date(2021,1,1),datetime.date(2022,1,1),datetime.date(2023,1,1)],
-        B=['A','B','C','D'],
-        C=['5-6','7-8','9-10','11'],
-        D=['XY','XZ','YZ','ZZ']))
-
-    perfs = Perfs(frame,dict(date='A',layer='B',interval='C',guntype='D'))
-
-    # help(frame.__getitem__)
-
-    print(perfs.mapping)
-    print(perfs[2].date)
-
-    print(perfs.layer)
-
-    perfs2 = Perfs()
-
-    print(perfs2.mapping)
-
-    # # for d in dir(frame):
-    # #     print(d)
-
+        return getattr(self._list,key)
     
