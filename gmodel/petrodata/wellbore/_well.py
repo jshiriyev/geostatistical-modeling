@@ -79,10 +79,10 @@ class Well():
         self.status = status
 
         self.slot   = slot
-        self.drilling  = drilling
+        self.drill  = drilling
         self.layout = layout
         self.survey = survey
-        self.zones  = zone
+        self.zones  = zones
         self.perfs  = perfs
 
     @property
@@ -90,24 +90,16 @@ class Well():
         return self._name
 
     @name.setter
-    def name(self,value:dict):
-        self._name = str(value)
-
-    @property
-    def field(self):
-        return self._field
-
-    @field.setter
-    def field(self,value:dict):
-        self._field = str(value)
+    def name(self,value:str):
+        self._name = Name(value)
 
     @property
     def status(self):
         return self._status
 
     @status.setter
-    def status(self,value:dict):
-        self._status = str(value)
+    def status(self,value:str):
+        self._status = value
 
     @property
     def slot(self):
@@ -118,20 +110,12 @@ class Well():
         self._slot = Slot(**(value or {}))
 
     @property
-    def target(self):
-        return self._target
-
-    @target.setter
-    def target(self,value:dict):
-        self._target = Target(**(value or {}))
-
-    @property
     def drill(self):
         return self._drill
 
     @drill.setter
     def drill(self,value:dict):
-        self._drill = Drill(**(value or {}))
+        self._drill = Drilling(**(value or {}))
 
     @property
     def layout(self):
@@ -150,12 +134,12 @@ class Well():
         self._survey = Survey(**(value or {}))
 
     @property
-    def zone(self):
-        return self._zone
+    def zones(self):
+        return self._zones
 
-    @zone.setter
-    def zone(self,value:dict):
-        self._zone = Zone(**(value or {}))
+    @zones.setter
+    def zones(self,value:dict):
+        self._zones = Zones(**(value or {}))
 
     @property
     def perfs(self):
