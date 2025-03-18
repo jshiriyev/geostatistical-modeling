@@ -22,6 +22,10 @@ gmodel/onepager/wellbore/_layout.py
 gmodel/onepager/wellbore/_onepager.py
 gmodel/petrodata/__init__.py
 gmodel/petrodata/_frame.py
+gmodel/petrodata/reservoir/__init__.py
+gmodel/petrodata/reservoir/_faults.py
+gmodel/petrodata/reservoir/_reservoir.py
+gmodel/petrodata/reservoir/_surface.py
 gmodel/petrodata/wellbore/__init__.py
 gmodel/petrodata/wellbore/_drilling.py
 gmodel/petrodata/wellbore/_layout.py

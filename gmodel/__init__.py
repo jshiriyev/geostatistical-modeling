@@ -1,3 +1,2 @@
-from . import petrodata
-
-from .petrodata import Well
+from .petrodata import wellbore
+from .petrodata import reservoir

@@ -37,7 +37,7 @@ class Name:
             raise ValueError(f"Invalid template '{template}' for index '{index}'. Error: {e}")
 
     @staticmethod
-    def digits(name:str) -> str:
+    def digits(name:str,template:str=None) -> str:
         """Returns digits or characters enclosed in single quotes from a given string.
         If no match is found, returns the original string.
 

@@ -12,7 +12,10 @@ class Zones():
 
         sorted_pairs = sorted(zip(tops,keys))
 
-        self._tops,self._keys = zip(*sorted_pairs) if sorted_pairs else [],[]
+        if sorted_pairs:
+            self._tops,self._keys = zip(*sorted_pairs)
+        else:
+            self._tops,self._keys = [],[]
 
     def index(self,key):
         """Returns the index of formation based on its name."""
