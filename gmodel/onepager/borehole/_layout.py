@@ -1,8 +1,8 @@
 import lasio
 
-from ._label import Label
-from ._depth import Depth
-from ._xaxis import Xaxis
+# from ._label import Label
+# from ._depth import Depth
+# from ._xaxis import Xaxis
 
 class Layout():
 

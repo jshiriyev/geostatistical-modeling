@@ -87,6 +87,8 @@ class Well():
         self.zones  = zones
         self.perfs  = None
 
+        self.las    = []
+
     @property
     def name(self):
         return self._name

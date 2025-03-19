@@ -7,7 +7,7 @@ from matplotlib.path import Path
 
 import numpy
 
-from _templix import PropDict
+from ._templix import PropDict
     
 class Weaver():
 

@@ -3,10 +3,9 @@ from matplotlib import pyplot
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MaxNLocator
 
-from pphys.visualization.onepager import Weaver
+from .section._booter import Booter
 
-from ._booter import Booter
-from ._formation import Formation
+from ._weaver import Weaver
 
 class Correlation():
 
@@ -77,24 +76,26 @@ class Correlation():
 		maxnlocator = (maxnlocator or {})
 		tick_params = (tick_params or {})
 
-		if maxnlocator.get('nbins'):
-			maxnlocator['nbins'] = 10,
+		if not maxnlocator.get('nbins'):
+			maxnlocator['nbins'] = 10
 
-		if maxnlocator.get('prune'):
+		if not maxnlocator.get('prune'):
 			maxnlocator['prune'] = 'both'
 
-		if tick_params.get('direction'):
+		axis.yaxis.set_major_locator(MaxNLocator(**maxnlocator))
+
+		if not tick_params.get('direction'):
 			tick_params['direction'] = 'in'
 
-		if tick_params.get('right'):
+		if not tick_params.get('right'):
 			tick_params['right'] = True
 
-		axis.yaxis.set_major_locator(MaxNLocator(**maxnlocator))
 		axis.yaxis.set_tick_params(**tick_params)
 	
 	def __call__(self,*args,**kwargs):
 		"""Initializes the main scene of Correlation instance."""
 		self.scene = Booter(*args,**kwargs)
+		
 		self.scene(self.scene_axis)
 
 		return self
@@ -121,10 +122,14 @@ class Correlation():
 		self.scene.axis.text(x,ylabel,key,zorder=2,ha='center',va='center',
 			bbox=dict(facecolor="white", edgecolor="none",pad=1))
 
+	def tops(self,key:str):
+		"""Returns well tops for the given key as a list."""
+		return [w.zones[key] for w in self._wells]
+
 	def add_top(self,key,**kwargs):
 		"""Adds the formation top line to the main view."""
 		xlocs = self.scene.xlocs()
-		ylocs = self.scene.ylocs(self.tops[key])
+		ylocs = self.scene.ylocs(self.tops(key))
 
 		self.scene.axis.plot(xlocs,ylocs,**kwargs)
 
@@ -184,3 +189,4 @@ class Correlation():
 	@property
 	def litho(self):
 		return self.litho_axis
+	

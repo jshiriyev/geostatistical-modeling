@@ -3,22 +3,30 @@ from matplotlib import pyplot
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MaxNLocator
 
-from pphys.visualization.onepager import Weaver
+from .section._booter import Booter
 
-from ._booter import Booter
-from ._formation import Formation
+from ._weaver import Weaver
 
 class Correlation():
 
-	def __init__(self,tops:Formation=None,figsize=None):
+	def __init__(self,*args,**kwargs):
 
-		self.tops = tops
+		self._wells = list(args)
+		self.figure = pyplot.figure(**kwargs)
 
-		self.figure = pyplot.figure(figsize=figsize)
+	@property
+	def wells(self):
+		return self._wells
 
-	def set(self,**kwargs):
+	def __getitem__(self,key):
+		return self._wells[key]
 
-		gs = GridSpec(2,3,figure = self.figure,**kwargs)
+	def __iter__(self):
+		yield from self._wells
+
+	def set(self,depth:dict=None,**kwargs):
+
+		gs = GridSpec(2,3,figure=self.figure,**kwargs)
 
 		self.west_axis = self.figure.add_subplot(gs[0,0])
 		self.west_axis.spines['bottom'].set_visible(False)
@@ -36,7 +44,7 @@ class Correlation():
 
 		self.depth_axis = self.figure.add_subplot(gs[1,0])
 		self.depth_axis.spines['top'].set_visible(False)
-		self.set_depth(self.depth_axis)
+		self.set_depth_axis(self.depth_axis,**(depth or {}))
 
 		self.scene_axis = self.figure.add_subplot(gs[1,1])
 		self.scene_axis.spines['top'].set_visible(False)
@@ -51,7 +59,6 @@ class Correlation():
 	@staticmethod
 	def set_axis(axis):
 		"""Configures the given axis to have no ticks and be within (0,1)."""
-
 		axis.set_xlim((0,1))
 		axis.set_ylim((0,1))
 
@@ -59,27 +66,39 @@ class Correlation():
 		axis.set_yticks([])
 
 	@staticmethod
-	def set_depth(axis,nbins=10,pad=-33):
+	def set_depth_axis(axis,maxnlocator:dict=None,tick_params:dict=None):
 		"""Configures the depth axis to have no ticks and be within (0,1)."""
-
 		axis.set_xlim((0,1))
 		axis.set_ylim((0,1))
 
-		axis.yaxis.set_major_locator(MaxNLocator(nbins,prune='both'))
-		axis.tick_params(axis='y',direction='in',right=True,pad=pad)
-
 		axis.set_xticks([])
+
+		maxnlocator = (maxnlocator or {})
+		tick_params = (tick_params or {})
+
+		if not maxnlocator.get('nbins'):
+			maxnlocator['nbins'] = 10
+
+		if not maxnlocator.get('prune'):
+			maxnlocator['prune'] = 'both'
+
+		axis.yaxis.set_major_locator(MaxNLocator(**maxnlocator))
+
+		if not tick_params.get('direction'):
+			tick_params['direction'] = 'in'
+
+		if not tick_params.get('right'):
+			tick_params['right'] = True
+
+		axis.yaxis.set_tick_params(**tick_params)
 	
 	def __call__(self,*args,**kwargs):
 		"""Initializes the main scene of Correlation instance."""
 		self.scene = Booter(*args,**kwargs)
+		
 		self.scene(self.scene_axis)
 
 		return self
-
-	def well(self,index):
-		"""Returns the x-center for the given index."""
-		return self.scene.xcenter(index)
 
 	def add_curve(self,index,xvals,depth,ylabel,key=None,**kwargs):
 
@@ -87,7 +106,9 @@ class Correlation():
 
 		self.scene.axis.plot(self.scene.xloc(index),[ylabel,]*2,**kwargs)
 
-		self.scene.axis.text(self.well(index),ylabel,key,zorder=2,ha='center',va='center',
+		x = self.scene.xcenter(index)
+
+		self.scene.axis.text(x,ylabel,key,zorder=2,ha='center',va='center',
 			bbox=dict(facecolor="white", edgecolor="none",pad=1))
 
 	def add_gradient(self,index,xvals,depth,ylabel,key=None,xmin=None,xmax=None,left=False,**kwargs):
@@ -96,13 +117,19 @@ class Correlation():
 
 		self.scene.axis.plot(self.scene.xloc(index),[ylabel,]*2,**kwargs)
 
-		self.scene.axis.text(self.well(index),ylabel,key,zorder=2,ha='center',va='center',
+		x = self.scene.xcenter(index)
+
+		self.scene.axis.text(x,ylabel,key,zorder=2,ha='center',va='center',
 			bbox=dict(facecolor="white", edgecolor="none",pad=1))
+
+	def tops(self,key:str):
+		"""Returns well tops for the given key as a list."""
+		return [w.zones[key] for w in self._wells]
 
 	def add_top(self,key,**kwargs):
 		"""Adds the formation top line to the main view."""
 		xlocs = self.scene.xlocs()
-		ylocs = self.scene.ylocs(self.tops[key])
+		ylocs = self.scene.ylocs(self.tops(key))
 
 		self.scene.axis.plot(xlocs,ylocs,**kwargs)
 
@@ -135,8 +162,11 @@ class Correlation():
 
 	def add_distance(self,index,value:float=None):
 
+		x0 = self.scene.xcenter(index)
+		x1 = self.scene.xcenter(index+1)
+
 		self.head.annotate(
-		    "", xy=(self.well(index),0.25),xytext=(self.well(index+1),0.25),
+		    "", xy=(x0,0.25),xytext=(x1,0.25),
 		    arrowprops=dict(arrowstyle="<->", lw=2)
 		)
 
@@ -159,3 +189,4 @@ class Correlation():
 	@property
 	def litho(self):
 		return self.litho_axis
+	

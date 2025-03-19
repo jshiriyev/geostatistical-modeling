@@ -1,4 +1,4 @@
-from _motifs import Motifs
+from ._motifs import Motifs
 
 class PropDict:
     """It is a class representation of petrophysical property dictionary."""
