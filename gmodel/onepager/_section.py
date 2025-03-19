@@ -142,7 +142,7 @@ class Correlation():
 		"""Adds the formation fill to the main view."""
 		xlocs = self.scene.xlocs()
 
-		ytops,ybots = self.tops.limit(key)
+		ytops,ybots = zip(*(w.zones.limit(key) for w in self._wells))
 
 		ytops = self.scene.ylocs(ytops)
 		ybots = self.scene.ylocs(ybots)

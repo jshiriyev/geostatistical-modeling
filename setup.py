@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
 	name = 'gmodel',
-	version = '0.0.24',
+	version = '0.0.27',
 	packages = find_packages(),
 	install_requires = [
 		'numpy>=1.26.4',
