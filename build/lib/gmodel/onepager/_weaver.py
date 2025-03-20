@@ -7,20 +7,29 @@ from matplotlib.path import Path
 
 import numpy
 
+from numpy import ndarray
+
 from ._templix import PropDict
     
 class Weaver():
 
     @staticmethod
-    def fill_solid(axis:plt.Axes,x:numpy.ndarray,y1:numpy.ndarray,y2:numpy.ndarray,prop:PropDict):
+    def fill_solid(axis:plt.Axes,y:ndarray,x1:ndarray,x2:ndarray,prop:PropDict):
+        """Fill between the log curves with a solid facecolor, hatches, and motifs.
 
-        # Fill between the curves
-        fill = axis.fill_between(x,y1,y2,facecolor=prop.facecolor,hatch=prop.hatch)
+        For color specification, please check:
+        - https://matplotlib.org/stable/tutorials/colors/colors.html
+
+        For list of hatches, please check:
+        - https://matplotlib.org/stable/gallery/shapes_and_collections/hatch_style_reference.html
+
+        """
+        fill = axis.fill_betweenx(y,x1,x2,facecolor=prop.facecolor,hatch=prop.hatch)
 
         for motif in prop.motifs:
             # Create the pattern patches
             patches = Weaver.patches(
-                x.min(),x.max(),y1.min(),y2.max(),motif
+                x1.min(),x2.max(),y.min(),y.max(),motif
                 )
 
             # Clip the pattern patches
@@ -34,46 +43,41 @@ class Weaver():
         return axis
 
     @staticmethod
-    def fill_gradient(axis:plt.Axes,x:numpy.ndarray,y:numpy.ndarray,xmin=None,xmax=None,left=False,fill_color=None,alpha=None,**kwargs):
-        """Plot a line with a linear alpha gradient filled beneath it."""
-        line, = axis.plot(x,y,**kwargs)
+    def fill_colormap(axis:plt.Axes,y:ndarray,x1:ndarray,x2:float=0,colormap='Reds',vmin=None,vmax=None):
+        """Fill between the log curves with a given colormap.
 
-        if fill_color is None:
-            fill_color = line.get_color()
+        For list of colormaps, please check:
+        - https://matplotlib.org/stable/users/explain/colors/colormaps.html
 
-        rgb = mcolors.colorConverter.to_rgb(fill_color)
-        rgb = numpy.array([rgb]).repeat(y.size,axis=0)
+        """
+        vmin = numpy.nanmin(x1) if vmin is None else vmin
+        vmax = numpy.nanmax(x1) if vmax is None else vmax
 
-        z = rgb[:,:,numpy.newaxis].transpose((0,2,1))
+        x_normalized = mcolors.Normalize(vmin=vmin,vmax=vmax)(x1)
 
-        xmin = numpy.nanmin(x) if xmin is None else xmin
-        xmax = numpy.nanmax(x) if xmax is None else xmax
+        z = plt.get_cmap(colormap)(x_normalized)
+        z = z[:,:,numpy.newaxis].transpose((0,2,1))
+
+        xmin = numpy.nanmin(x1) if numpy.nanmin(x1)<x2 else x2
+        xmax = numpy.nanmax(x1) if numpy.nanmax(x1)>x2 else x2
 
         ymin,ymax = numpy.nanmin(y),numpy.nanmax(y)
 
-        z[:,0,1] = (xmax-x)/(xmax-xmin)
-
-        im = axis.imshow(z,
+        img = axis.imshow(z,
             aspect = 'auto',
             extent = [xmin,xmax,ymin,ymax],
             origin = 'lower',
-            zorder = line.get_zorder()
+            # zorder = line.get_zorder()
             )
 
-        xy = numpy.column_stack([x,y])
-
-        if left:
-            xy = numpy.vstack([[xmin,ymin],xy,[xmin,ymax],[xmin,ymin]])
-        else:
-            xy = numpy.vstack([[xmax,ymin],xy,[xmax,ymax],[xmax,ymin]])
-
+        xy = numpy.column_stack([x1,y])
+        xy = numpy.vstack([[x2,ymin],xy,[x2,ymax],[x2,ymin]])
         xy = xy[~numpy.isnan(xy).any(axis=1)]
 
         clip = Polygon(xy,facecolor='none',edgecolor='none',closed=True)
-
         axis.add_patch(clip)
 
-        im.set_clip_path(clip)
+        img.set_clip_path(clip)
 
         return axis
 
