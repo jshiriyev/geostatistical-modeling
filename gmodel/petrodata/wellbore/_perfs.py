@@ -46,8 +46,9 @@ class Perf:
     interval    : tuple
 
     layer       : str = None
-    date        : date = None
     guntype     : str = None
+    start       : date = None
+    stop        : date = None
 
     def __post_init__(self):
 
