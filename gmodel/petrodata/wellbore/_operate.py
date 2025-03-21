@@ -4,9 +4,8 @@ from dataclasses import dataclass, fields
 class Operation:
     """It is a Production  dictionary for a perf in a well."""
 
-    date    : datetime.date = None
-
     well    : str = None
+    date    : datetime.date = None
 
     horizon : str = None
 
