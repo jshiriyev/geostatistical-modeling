@@ -1,15 +1,17 @@
+import numpy
+
 class Hexahedron():
 
 	def __init__(self,r1,r2,r3,r4,r5,r6,r7,r8):
 
-		self.r1 = numpy.array(r1)
-		self.r2 = numpy.array(r2)
-		self.r3 = numpy.array(r3)
-		self.r4 = numpy.array(r4)
-		self.r5 = numpy.array(r5)
-		self.r6 = numpy.array(r6)
-		self.r7 = numpy.array(r7)
-		self.r8 = numpy.array(r8)
+		self.r1 = numpy.asarray(r1)
+		self.r2 = numpy.asarray(r2)
+		self.r3 = numpy.asarray(r3)
+		self.r4 = numpy.asarray(r4)
+		self.r5 = numpy.asarray(r5)
+		self.r6 = numpy.asarray(r6)
+		self.r7 = numpy.asarray(r7)
+		self.r8 = numpy.asarray(r8)
 
 	@property
 	def normal1(self):
@@ -62,7 +64,8 @@ class Hexahedron():
 
 		return 1/8*(
 			self.r1+self.r2+self.r3+self.r4+
-			self.r5+self.r6+self.r7+self.r8)
+			self.r5+self.r6+self.r7+self.r8
+			)
 
 	@property
 	def center1(self):
