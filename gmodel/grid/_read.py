@@ -6,35 +6,6 @@ import re
 
 import numpy
 
-def loadgrid(*args,**kwargs):
-    """
-    Returns an instance of GridFile. If a filepath is specified, the instance
-    represents the file.
-    
-    Arguments:
-        filepath {str} -- path to the given grdecl file
-
-    Keyword Arguments:
-        homedir {str} -- path to the home (output) directory
-        filedir {str} -- path to the file (input) directory
-    
-    Returns:
-        GridFile -- an instance of GridFile filled with grdecl file text.
-
-    """
-    if len(args)==1:
-        filepath = args[0]
-    elif len(args)>1:
-        raise "The function does not take more than one positional argument."
-
-    # It creates an empty GridFile instance.
-    nullfile = GridFile(filepath=filepath,**kwargs)
-
-    # It reads grdecl file and returns GridFile instance.
-    fullfile = GridWorm(nullfile).gridfile
-
-    return fullfile
-
 class GridRead():
 
     def __init__(self,gridfile):
@@ -130,27 +101,3 @@ class GridRead():
             yield txtmaster
         finally:
             txtmaster.close()
-
-def starsplit(string_list,default=1.0):
-    """It returns star splitted list repeating post-star pre-star times."""
-
-    float_list = []
-
-    for string_value in string_list:
-
-        if "*" in string_value:
-
-            if string_value.endswith("*"):
-                mult = string_value.rstrip("*")
-                mult,val = int(mult),default
-            else:
-                mult,val = string_value.split("*",maxsplit=1)
-                mult,val = int(mult),float(val)
-
-            for i in range(mult):
-                float_list.append(val)
-
-        else:
-            float_list.append(float(string_value))
-
-    return float_list

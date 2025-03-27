@@ -1,4 +1,4 @@
-class CornPoint():
+class CornerPoint():
 
 	def __init__(self,grdecl):
 

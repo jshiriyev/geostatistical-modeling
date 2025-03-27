@@ -28,7 +28,7 @@ class GridDelta(GridBase):
 		self.dims = dims
 
 		self.length = None # Placeholder for reservoir domain total length calculations.
-		self.width = None  # Placeholder for reservoir domain total width calculations.
+		self.width  = None # Placeholder for reservoir domain total width calculations.
 		self.height = None # Placeholder for reservoir domain total height calculations.
 
 	@property
